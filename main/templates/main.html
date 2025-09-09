@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ app_name }}</title>
+</head>
+<body>
+    <h1>{{ app_name }}</h1>
+    <p>Name: {{ student_name }}</p>
+    <p>Class: {{ student_class }}</p>
+
+    <h2>Available Products</h2>
+    <ul>
+        {% for product in products %}
+            <li>
+                <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="100">
+                <strong>{{ product.name }}</strong> - Rp{{ product.price }} <br>
+                Category: {{ product.category }} <br>
+                {{ product.description }} <br>
+                {% if product.is_featured %}
+                    <em>⭐ Featured Product</em>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>No products available.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
