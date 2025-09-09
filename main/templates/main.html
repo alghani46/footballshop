@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>{{ app_name }}</title>
 </head>
 <body>
@@ -13,13 +12,9 @@
     <ul>
         {% for product in products %}
             <li>
-                <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="100">
                 <strong>{{ product.name }}</strong> - Rp{{ product.price }} <br>
-                Category: {{ product.category }} <br>
                 {{ product.description }} <br>
-                {% if product.is_featured %}
-                    <em>⭐ Featured Product</em>
-                {% endif %}
+                <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="150">
             </li>
         {% empty %}
             <li>No products available.</li>
