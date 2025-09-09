@@ -20,6 +20,9 @@ and if reads only '/' it will route to the application part of urls.py
 
 In main urls.py , it will mapped the path to the view in app that is within main views.py
 
+After i have push the application to the PWS, i made an admin account to manage adding the conents of the shoes by accesing the django admin
+
+
 diagram of the relation ship of 
 urls.py, views.py, models.py, and the HTML file
 ![Diagram Alur Django](https://miro.medium.com/v2/resize:fit:720/format:webp/1*8GLGtS0YYD1c8-QQZIshqw.png)
