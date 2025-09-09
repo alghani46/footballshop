@@ -124,6 +124,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://muhammad-rifqi46-footballshop.pbp.cs.ui.ac.id"
+]
 
 
 # Internationalization
