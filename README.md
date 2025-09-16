@@ -93,23 +93,28 @@ and with csrf_token, on each form submission will carries a hidden token that gi
 
 
 implemented the checklist above step-by-step
+
 1.Created base.html inside the templates/ folder 
+
 2.Added button inside main.html(Add detail, Add)
+
 3.Created the supporting templates html(add_product , product_detail)
+
 4.Hooking it up the XML/Json views and their urls
 
 
-Postman XML
-![XML All Products](screenshots/xml.png)
+### Postman Test Results
 
-Postman JSON
-![JSON All Products](screenshots/json.png)
+- **All Products (XML)**  
+  ![XML All Products](screenshots/xml.png)
 
+- **All Products (JSON)**  
+  ![JSON All Products](screenshots/json.png)
 
-Postman XML by ID
-![XML All Products](screenshots/xml_by_id1.png)
+- **Product by ID (XML)**  
+  ![XML by ID](screenshots/xml_by_id1.png)
 
+- **Product by ID (JSON)**  
+  ![JSON by ID](screenshots/json_by_id1.png)
 
-Postman JSON by ID
-![JSON  Product 1](screenshots/json_by_id1.png)
 
