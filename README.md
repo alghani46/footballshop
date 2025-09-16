@@ -42,3 +42,45 @@ Django frame works takes cares most of the hassle of web development by having a
 
 
 
+
+
+
+
+Assaigment 3
+1.Data delivery is essential, it allows information exchanged beetween the server and clients. Without it  it cannot share resources and
+intergrate with other systems.
+
+2.JSON,it feels more similar to phyton code and its indentation
+Its compact and easier to write and read for human
+
+3.is_valid() is to prevent invalid data from being saved ensuring consistency
+if its method retuns True. Django will know that it is safe
+else it will prevoide error to the user
+
+4.csrf_token serves as a protection a protection to csrf attacks
+where it will tricks the user to submitting dangerous request via a fake web
+and with csrf_token, on each form submission will carries a hidden token that gives proof that the request came from your site
+
+
+
+implemented the checklist above step-by-step
+1.Created base.html inside the templates/ folder 
+2.Added button inside main.html(Add detail, Add)
+3.Created the supporting templates html(add_product , product_detail)
+4.Hooking it up the XML/Json views and their urls
+
+
+Postman XML
+![XML All Products](screenshots/xml.png)
+
+Postman JSON
+![JSON All Products](screenshots/json.png)
+
+
+Postman XML by ID
+![XML All Products](screenshots/xml_by_id1.png)
+
+
+Postman JSON by ID
+![JSON  Product 1](screenshots/json_by_id1.png)
+

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+    <title>{{ product.name }}</title>
+{% endblock meta %}
+
+{% block content %}
+    <h2>{{ product.name }}</h2>
+    <p>Price: Rp{{ product.price }}</p>
+    <p>Description: {{ product.description }}</p>
+    <p>Category: {{ product.category }}</p>
+    <p>Featured: {{ product.is_featured }}</p>
+    {% if product.thumbnail %}
+        <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="200">
+    {% endif %}
+
+    <br><br>
+    <a href="{% url 'main:home' %}">Back to Product List</a>
+
+{% endblock content %}
