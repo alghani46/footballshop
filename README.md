@@ -107,15 +107,15 @@ implemented the checklist above step-by-step
 ### Postman Test Results
 
 - **All Products (XML)**  
-  ![XML All Products](screenshots/xml.png)
+  ![XML All Products](screnshots/xml.png)
 
 - **All Products (JSON)**  
-  ![JSON All Products](screenshots/json.png)
+  ![JSON All Products](screnshots/json.png)
 
 - **Product by ID (XML)**  
-  ![XML by ID](screenshots/xml_by_id1.png)
+  ![XML by ID](screnshots/xml_by_id1.png)
 
 - **Product by ID (JSON)**  
-  ![JSON by ID](screenshots/json_by_id1.png)
+  ![JSON by ID](screnshots/json_by_id1.png)
 
 
