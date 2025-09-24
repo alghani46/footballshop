@@ -5,34 +5,54 @@
 {% endblock meta %}
 
 {% block content %}
+    <h2>Welcome, {{ username }}</h2>
+    <p>Last Login: {{ last_login }}</p>
+
     <h1>{{ app_name }}</h1>
     <p>Name: {{ student_name }}</p>
     <p>Class: {{ student_class }}</p>
     <p>NPM: {{ student_npm }}</p>
+    <br>
 
+    <!-- logout -->
+    <p>
+        <a href="{% url 'main:logout' %}">
+            <button type="button">Logout</button>
+        </a>
+    </p>
 
-    <a href="{% url 'main:add_product' %}">
-    <button>Add Product</button>
-    </a>
+    <!-- add product -->
+    <p>
+        <a href="{% url 'main:add_product' %}">
+            <button type="button">Add Product</button>
+        </a>
+    </p>
 
     <h2>Available Products</h2>
     <ul>
-{% for product in products %}
-    <li>
-        <strong>{{ product.name }}</strong> - Rp{{ product.price }} <br>
-        {{ product.description }} <br>
-        {% if product.thumbnail %}
-            <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="150">
-        {% endif %}
-        <br>
-        <!--Detail button-->
-        <a href="{% url 'main:product_detail' product.id %}">
-            <button>Detail</button>
-        </a>
-    </li>
-{% empty %}
-    <li>No products available.</li>
-{% endfor %}
+        {% if products %}
+            {% for product in products %}
+                <li>
+                    <strong>{{ product.name }}</strong> - Rp{{ product.price }} <br>
+                    {{ product.description }} <br>
+                    <em>Category: {{ product.category }}</em> <br>
+                    <em>Featured: {{ product.is_featured }}</em> <br>
 
+                    {% if product.thumbnail %}
+                        <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="150">
+                    {% endif %}
+                    <br>
+
+                    <!-- Detail  -->
+                    <a href="{% url 'main:product_detail' product.id %}">
+                        <button>Detail</button>
+                    </a>
+                </li>
+                <br>
+            {% endfor %}
+        {% else %}
+            <li>No products available.</li>
+        {% endif %}
     </ul>
 {% endblock content %}
+
