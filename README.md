@@ -93,25 +93,81 @@ and with csrf_token, on each form submission will carries a hidden token that gi
 
 
 implemented the checklist above step-by-step
+
 1.Created base.html inside the templates/ folder 
+
 2.Added button inside main.html(Add detail, Add)
+
 3.Created the supporting templates html(add_product , product_detail)
+
 4.Hooking it up the XML/Json views and their urls
 
 
-Postman XML
-![XML All Products](screenshots/xml.png)
 
-Postman JSON
-![JSON All Products](screenshots/json.png)
+### Postman Test Results
+
+- **All Products (XML)**  
+  ![XML All Products](screnshots/xml.png)
+
+- **All Products (JSON)**  
+  ![JSON All Products](screnshots/json.png)
+
+- **Product by ID (XML)**  
+  ![XML by ID](screnshots/xml_by_id1.png)
+
+- **Product by ID (JSON)**  
+  ![JSON by ID](screnshots/json_by_id1.png)
 
 
-Postman XML by ID
-![XML All Products](screenshots/xml_by_id1.png)
+Assaigment4
 
 
-Postman JSON by ID
-![JSON  Product 1](screenshots/json_by_id1.png)
+1.In main/models.py import User in django and then add define a variable that define the foreign key of the user
+2.Make a migration of the models
+3.Create a handling of the register/logins in views.py
+4.Create a html to display the register/logins in a new html file
+5.Create a URL paths in main/urls.py
+
+
+
+readme checklist
+1.Django AuthenticationForm is a form that is from django to be able do a login system, it is automatically provides a field of username and password, it also checks for validation of the username and password to the database
+advantage:
+a built in system, so you dont need to make a authentication form manually
+automatically checks the username and password to the database 
+disavantage:
+it is only restricted to the username and password format
+not flexible enough to add another validation check (captcha , OTP)
+
+2.authentication and authorization , Django implement of it
+
+authentication is a process to verify your identity (by username password format)
+authoriazation is how much you have control on the app it self (normal users cant access admin page)
+
+django implementation of authentication is by using User model and authenticationform, if the login succes, then it create a session for the user
+django implementation of authorization is by checking permissions,group (like @login_required) , django also provies a is_staff,is_superuser,is_authenticated to diffrentiate users permissions
+
+3.benefits and drawbacks of using sessions and cookies in storing the state of a web application?
+Session
+Data stored in the server,
+more secure user only will only hold sessionID
+will probably need a big storage if there is going to have a lot of user 
+
+Cookies
+Data stored in the client browsers
+good for storing little info such as last login session
+risk for the data to be overwritten/ be stolen  if its not properly saved
+
+4.in web development, is the usage of cookies secure by default, or is there any potential risk that we should be aware of? How does Django handle this problem?
+Cookies are not inherintly safe by default
+it can risk, a Cookie theft, by XSS or sniffing in the web
+Cookie tampering, user can modify their cookies in the client side
+
+how django handles it
+django assaignts the cookie with a secret cookie so that i cannot be changed without properly validation
+and some additional security such as
+HttpOnly , where it cannot be accesed by JavaScript
+CSRF token,  to prevent CSRF for forms
 
 
 
