@@ -120,11 +120,15 @@ implemented the checklist above step-by-step
 
 
 Assaigment4
+
+
 1.In main/models.py import User in django and then add define a variable that define the foreign key of the user
 2.Make a migration of the models
 3.Create a handling of the register/logins in views.py
 4.Create a html to display the register/logins in a new html file
 5.Create a URL paths in main/urls.py
+
+
 
 readme checklist
 1.Django AuthenticationForm is a form that is from django to be able do a login system, it is automatically provides a field of username and password, it also checks for validation of the username and password to the database
