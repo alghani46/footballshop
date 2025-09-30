@@ -1,58 +1,57 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block meta %}
     <title>{{ app_name }}</title>
 {% endblock meta %}
 
+{% block title %}Home{% endblock %}
+
 {% block content %}
-    <h2>Welcome, {{ username }}</h2>
-    <p>Last Login: {{ last_login }}</p>
+<h2 class="mb-3">Welcome, {{ username }}</h2>
+<p><strong>Last Login:</strong> {{ last_login|date:"Y-m-d H:i" }}</p>
 
-    <h1>{{ app_name }}</h1>
-    <p>Name: {{ student_name }}</p>
-    <p>Class: {{ student_class }}</p>
-    <p>NPM: {{ student_npm }}</p>
-    <br>
 
-    <!-- logout -->
-    <p>
-        <a href="{% url 'main:logout' %}">
-            <button type="button">Logout</button>
-        </a>
-    </p>
+<!-- add product -->
+<p>
+    <a href="{% url 'main:add_product' %}">
+        <button type="button">Add Product</button>
+    </a>
+</p>
 
-    <!-- add product -->
-    <p>
-        <a href="{% url 'main:add_product' %}">
-            <button type="button">Add Product</button>
-        </a>
-    </p>
 
-    <h2>Available Products</h2>
-    <ul>
-        {% if products %}
-            {% for product in products %}
-                <li>
-                    <strong>{{ product.name }}</strong> - Rp{{ product.price }} <br>
-                    {{ product.description }} <br>
-                    <em>Category: {{ product.category }}</em> <br>
-                    <em>Featured: {{ product.is_featured }}</em> <br>
+<h3 class="mt-4">Available Products</h3>
 
-                    {% if product.thumbnail %}
-                        <img src="{{ product.thumbnail }}" alt="{{ product.name }}" width="150">
-                    {% endif %}
-                    <br>
+{% if products %}
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+            {% if product.thumbnail %}
+            <img src="{{ product.thumbnail }}" class="card-img-top" alt="{{ product.name }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.description|truncatewords:15 }}</p>
+                <p class="fw-bold text-success">Rp{{ product.price }}</p>
+                <p><em>Category: {{ product.category }}</em></p>
+                <p><em>Featured: {{ product.is_featured }}</em></p>
+                <div class="d-flex justify-content-between">
+                <a href="{% url 'main:product_detail' product.id %}" class="btn btn-primary btn-lg w-25 text-dark">Detail</a>
+                <a href="{% url 'main:edit_product' product.id %}" class="btn btn-warning btn-lg w-25 text-dark">Edit</a>
+                <a href="{% url 'main:delete_product' product.id %}" class="btn btn-danger btn-lg w-25 text-dark">Delete</a>
 
-                    <!-- Detail  -->
-                    <a href="{% url 'main:product_detail' product.id %}">
-                        <button>Detail</button>
-                    </a>
-                </li>
-                <br>
-            {% endfor %}
-        {% else %}
-            <li>No products available.</li>
-        {% endif %}
-    </ul>
-{% endblock content %}
 
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- No Product pciture handling -->
+<div class="text-center">
+    <img src="{% static 'images/no_product.png' %}" alt="No products" width="150">
+    <p class="mt-2">No products available. Add some!</p>
+</div>
+{% endif %}
+{% endblock %}

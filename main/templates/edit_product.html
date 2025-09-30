@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Add Product{% endblock %}
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product{% endblock %}
 
 {% block content %}
 <div class="card shadow p-4">
-    <h2 class="mb-3">{% if product %}Edit{% else %}Add{% endif %} Product</h2>
+    <h2 class="mb-3">{% if product %}Edit{% else %}Add{% endif %} Product{% if product %}: {{ product.name }}{% endif %}</h2>
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}

@@ -221,3 +221,66 @@ HttpOnly , where it cannot be accesed by JavaScript
 CSRF token,  to prevent CSRF for forms
 
 
+Assaigment 5
+
+1.Created a html for Edit,Delete product
+2.Created a views.py for Edit,Delete product
+3.Added bootstrap,and navbar to the base.html
+4.Added a static handling in the settings.py
+5.added a static folder in the root
+6.created a css folder, and a global.css file
+7.in the global.css define classes to provide type of button , forms, and more
+
+
+CSS selector priority
+!important can override everything else
+1.Inline Style
+2.IDs (#title,#text)
+3.Classes(.title , .text)
+4.Type Selector
+
+
+
+Responsive Design
+Users may access web apps from different devices
+It improves user experience
+
+Example
+Instagram applies a responsive design,
+On desktop/ mobile the proportion of the post is adjusted well, their layout is scalable 
+
+Kompas has not apply a proper responsive design
+while in the desktop display shows a balanced and structured display
+the Mobile version shows very cluttered , images miss aligned , ads takes up most of the screen and menus feels less intuitive
+
+Box Model
+Each HTML element is a Box made of 4 part
+Content,Padding,Border,Margin
+
+Content is the actual text/image inside the box
+Padding is a psace beetween the content and border
+border the line suorrounding the padding+content
+Margin is the space outside the border,seperating the element from others
+
+Implementation Example:
+.card {
+  margin: 20px;        
+  border: 2px solid #333; 
+  padding: 15px;       
+}
+
+
+
+
+
+Layour Systems
+Flexbox
+One dimensional
+Best for aligning items horizontally/veertically
+Example Navbar, aligning buttons
+
+Grid
+Two Dimensional
+Best for full page layouts
+Exanoke Dashboard, listing grid
+
