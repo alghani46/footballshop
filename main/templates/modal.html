@@ -1,0 +1,290 @@
+{% load static %}
+
+<!-- CREATE MODAL -->
+<div id="crudModal"
+     class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center d-none"
+     style="z-index:1055;">
+  <div id="crudModalContent" class="bg-white rounded-3 shadow p-3" style="min-width:520px;max-width:90vw;">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <div>
+        <h5 class="mb-0">Create Product (AJAX)</h5>
+        <small class="text-muted">Quickly add a product without reloading.</small>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="hideModal()">×</button>
+    </div>
+
+    <form id="productForm" class="needs-validation" novalidate>
+      <div class="mb-2">
+        <label class="form-label">Name</label>
+        <input name="name" class="form-control" required>
+        <div class="invalid-feedback">Name is required.</div>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Description</label>
+        <textarea name="description" rows="3" class="form-control"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Price</label>
+        <input name="price" type="number" min="0" class="form-control" value="0">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Category</label>
+        <input name="category" class="form-control" placeholder="Shoe, Apparel, …">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Thumbnail URL</label>
+        <input name="thumbnail" type="url" class="form-control" placeholder="https://…">
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+        <label class="form-check-label" for="is_featured">Featured</label>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" onclick="hideModal()">Cancel</button>
+        <button type="submit" class="btn btn-success" id="createSubmitBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center d-none" style="z-index:1055;">
+  <div class="bg-white rounded-3 shadow p-3" style="min-width:520px;max-width:90vw;">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <h5 class="mb-0">Update Product (AJAX)</h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="hideEdit()">×</button>
+    </div>
+    <form id="editForm" novalidate>
+      <input type="hidden" name="id" id="edit-id">
+      <div class="mb-2">
+        <label class="form-label">Name</label>
+        <input name="name" id="edit-name" class="form-control" required>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Description</label>
+        <textarea name="description" id="edit-description" rows="3" class="form-control"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Price</label>
+        <input name="price" id="edit-price" type="number" class="form-control" min="0">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Category</label>
+        <input name="category" id="edit-category" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Thumbnail URL</label>
+        <input name="thumbnail" id="edit-thumbnail" type="url" class="form-control">
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="edit-featured" name="is_featured">
+        <label class="form-check-label" for="edit-featured">Featured</label>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" onclick="hideEdit()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="updateSubmitBtn">Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM (Bootstrap modal) -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Delete Product</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong id="delName">this product</strong>?
+        <div class="small text-muted mt-2">This action cannot be undone.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const crudModal       = document.getElementById('crudModal');
+  const crudContent     = document.getElementById('crudModalContent');
+  const editModal       = document.getElementById('editModal');
+  const confirmDelEl    = document.getElementById('confirmDeleteModal');
+  const productForm     = document.getElementById('productForm');
+  const editForm        = document.getElementById('editForm');
+
+  const bs = window.bootstrap || null;
+
+  // Ensure truly hidden when .d-none is applied
+  const fix = document.createElement('style');
+  fix.textContent = `
+    #crudModal.d-none, #editModal.d-none { display: none !important; }
+  `;
+  document.head.appendChild(fix);
+
+  function getCookie(name){
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  const CSRF = getCookie('csrftoken');
+
+  // Expose globals
+  window.showModal = function () {
+    if (!crudModal || !crudContent) return;
+    crudModal.classList.remove('d-none');
+    crudContent.style.transform = 'scale(.98)';
+    crudContent.style.opacity   = '0';
+    requestAnimationFrame(() => {
+      crudContent.style.transition = 'all .15s';
+      crudContent.style.transform  = 'scale(1)';
+      crudContent.style.opacity    = '1';
+    });
+  };
+  window.hideModal = function () {
+    if (!crudModal || !crudContent) return;
+    crudContent.style.transform = 'scale(.98)';
+    crudContent.style.opacity   = '0';
+    setTimeout(() => crudModal.classList.add('d-none'), 150);
+  };
+
+  window.showEdit = function (p) {
+    if (!editModal) return;
+    document.getElementById('edit-id').value          = p.id;
+    document.getElementById('edit-name').value        = p.name || '';
+    document.getElementById('edit-description').value = p.description || '';
+    document.getElementById('edit-price').value       = p.price ?? 0;
+    document.getElementById('edit-category').value    = p.category || '';
+    document.getElementById('edit-thumbnail').value   = p.thumbnail || '';
+    document.getElementById('edit-featured').checked  = !!p.is_featured;
+    editModal.classList.remove('d-none');
+  };
+  window.hideEdit = function () { if (editModal) editModal.classList.add('d-none'); };
+
+  // Delete (expose as both names so either call works)
+  let _deleteModal = null, _pendingDeleteId = null;
+  function _openDelete(id, name){
+    if (!confirmDelEl || !bs) return;
+    _pendingDeleteId = id;
+    const delName = document.getElementById('delName');
+    if (delName) delName.textContent = name || 'this product';
+    _deleteModal = _deleteModal || new bs.Modal(confirmDelEl);
+    _deleteModal.show();
+  }
+  window.openDeleteModal = _openDelete;
+  window.__openDeleteModal = _openDelete;
+
+  // Endpoints from main.html (preferred) or fall back to template tags here
+  const endpoints = window.__ajaxEndpoints || {
+    CREATE_URL : "{% url 'main:add_product_ajax' %}",
+    UPDATE_URL : (id) => "{% url 'main:update_product_ajax' 0 %}".replace('0', id),
+    DELETE_URL : (id) => "{% url 'main:delete_product_ajax' 0 %}".replace('0', id),
+  };
+
+  // CREATE 
+  if (productForm) {
+    const createBtn = document.getElementById('createSubmitBtn');
+    let creating = false;
+
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!productForm.checkValidity()) {
+        productForm.classList.add('was-validated');
+        return;
+      }
+      if (creating) return;         // guard
+      creating = true;
+      if (createBtn) createBtn.disabled = true;
+
+      try {
+        const res = await fetch(endpoints.CREATE_URL, {
+          method: 'POST',
+          body: new FormData(productForm),
+          headers: { 'X-CSRFToken': CSRF }
+        });
+        if (!res.ok) throw new Error('create failed');
+
+        productForm.reset();
+        productForm.classList.remove('was-validated');
+        window.hideModal();
+        window.showToast?.('Product created', 'Saved successfully', 'success');
+        document.dispatchEvent(new CustomEvent('products:refresh'));
+      } catch (err) {
+        window.showToast?.('Failed to create', 'Please check your input', 'error');
+        console.error(err);
+      } finally {
+        creating = false;
+        if (createBtn) createBtn.disabled = false;
+      }
+    });
+  }
+
+  // UPDATE 
+  if (editForm) {
+    const updateBtn = document.getElementById('updateSubmitBtn');
+    let updating = false;
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-id')?.value;
+      if (!id) return;
+
+      if (updating) return;
+      updating = true;
+      if (updateBtn) updateBtn.disabled = true;
+
+      try {
+        const res = await fetch(endpoints.UPDATE_URL(id), {
+          method: 'POST',
+          body: new FormData(editForm),
+          headers: { 'X-CSRFToken': CSRF }
+        });
+        if (!res.ok) throw new Error('update failed');
+
+        window.hideEdit();
+        window.showToast?.('Product updated', 'Changes saved', 'success');
+        document.dispatchEvent(new CustomEvent('products:refresh'));
+      } catch (err) {
+        window.showToast?.('Update failed', 'Try again', 'error');
+        console.error(err);
+      } finally {
+        updating = false;
+        if (updateBtn) updateBtn.disabled = false;
+      }
+    });
+  }
+
+  // DELETE
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  if (confirmDeleteBtn) {
+    let deleting = false;
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (deleting || !_pendingDeleteId) return;
+      deleting = true;
+      confirmDeleteBtn.disabled = true;
+
+      try {
+        const res = await fetch(endpoints.DELETE_URL(_pendingDeleteId), {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF }
+        });
+        if (!res.ok) throw new Error('delete failed');
+
+        _deleteModal.hide(); _pendingDeleteId = null;
+        window.showToast?.('Product deleted', 'Removed successfully', 'success');
+        document.dispatchEvent(new CustomEvent('products:refresh'));
+      } catch (err) {
+        window.showToast?.('Delete failed', 'Please try again', 'error');
+        console.error(err);
+      } finally {
+        deleting = false;
+        confirmDeleteBtn.disabled = false;
+      }
+    });
+  }
+})();
+</script>

@@ -284,3 +284,52 @@ Two Dimensional
 Best for full page layouts
 Exanoke Dashboard, listing grid
 
+
+
+
+
+
+
+
+
+
+Assaingment 6
+1.Created the CRUD via Ajax(create/delete/update)
+2.Authentication via ajax(login/register)
+3.Created Modals,Toast
+4.Created static/js/toast.js
+5.Added a refresh page button
+6.Added state management
+
+
+Synchronous vs ASynchronous
+In Synchronous:
+Browser submits a request and waits until the whole page reloads
+UI remains uninteractive until the page reloads
+ASynchronous:
+it sends the request on the background partially reload
+UI can still be interacted 
+
+
+How does AJAX work in Django (request–response flow)?
+1.a JavaScript listen and calls fetch() to a django url
+2.URL maps to the ajax endpoint
+3.Reads queties in the Database
+  Writes and validates the inputs
+  give a JSON response
+4.Parse the said JSON, and update the DOM
+
+
+What are the advantages of using AJAX compared to regular rendering in Django?
+No full page reloads, faster perceiving perfomance
+Cleaner seperation, Backend serves the JSON data, frontend handles UI logics
+
+How do you ensure security when using AJAX for Login and Register features in Django?
+Include the csrftoken cookie
+Method restrictions (@require_POST)
+Sessions & Cookies
+
+
+How does AJAX affect user experience (UX) on websites?
+Faster feedback: user see immidiate results with toast(s)
+Few full reloads: smoother experience on slower networs

@@ -1,18 +1,23 @@
 
 from .models import Product
 from .forms import ProductForm
-from django.shortcuts import render, redirect ,get_object_or_404
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.core import serializers
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate, login
-from django.contrib.auth import logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
+from django.middleware.csrf import get_token
+from django.utils.html import strip_tags
+
+
+
 
 @login_required(login_url='/login')
 def home(request):
@@ -28,41 +33,19 @@ def home(request):
     }
     return render(request, "main.html", context)
 def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Account created successfully! Please log in.")
-            return redirect('main:login')
-    else:
+    # Page renderer only; AJAX posts must go to /api/auth/register (register_ajax)
+    if request.method == "GET":
         form = UserCreationForm()
-    return render(request, 'register.html', {'form': form})
+        return render(request, "register.html", {"form": form})
+    return HttpResponse(status=405)  # Method Not Allowed (use AJAX endpoint)
+
 
 def login_user(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            # Simpan last login sebelumnya (sebelum Django update)
-            previous_login = user.last_login  
-
-            login(request, user)  # Django update last_login sekarang
-
-            response = redirect("main:home")
-            if previous_login:
-                response.set_cookie("last_login", previous_login.strftime("%Y-%m-%d %H:%M"))
-            else:
-                response.set_cookie("last_login", "First login!")
-            return response
-        else:
-            messages.error(request, "Username atau password salah!")
-
-    # kalau GET request (atau login gagal) tampilkan halaman login
-    form = AuthenticationForm()
-    return render(request, "login.html", {"form": form})
-
+    # Page renderer only; AJAX posts must go to /api/auth/login (login_ajax)
+    if request.method == "GET":
+        form = AuthenticationForm()
+        return render(request, "login.html", {"form": form})
+    return HttpResponse(status=405)  # Method Not Allowed (use AJAX endpoint)
 
 
 def logout_user(request):
@@ -85,10 +68,10 @@ def add_product(request):
     return render(request, "add_product.html", {"form": form})
 
 
+@login_required
 def product_detail(request, id):
-    product = get_object_or_404(Product, pk=id)
+    product = get_object_or_404(Product, pk=id, user=request.user)
     return render(request, "product_detail.html", {"product": product})
-
 
 @login_required(login_url='/login')
 def edit_product(request, id):
@@ -114,6 +97,99 @@ def delete_product(request, id):
         return redirect("main:home")
 
     return render(request, "delete_product.html", {"product": product})
+
+
+
+@login_required(login_url='/login/')
+def products_json(request):
+    qs = Product.objects.filter(user=request.user).order_by('-id')
+    data = [{
+        "id": p.id, "name": p.name, "description": p.description, "price": p.price,
+        "category": p.category, "thumbnail": p.thumbnail, "is_featured": p.is_featured,
+    } for p in qs]
+    return JsonResponse(data, safe=False)
+
+@login_required(login_url='/login/')
+def product_json_by_id(request, id):
+    p = Product.objects.filter(user=request.user, pk=id).first()
+    if not p:
+        return JsonResponse({'detail':'Not found'}, status=404)
+    data = {
+        "id": p.id, "name": p.name, "description": p.description, "price": p.price,
+        "category": p.category, "thumbnail": p.thumbnail, "is_featured": p.is_featured,
+    }
+    return JsonResponse(data)
+
+@csrf_exempt
+@require_POST
+@login_required(login_url='/login/')
+def add_product_ajax(request):
+    Product.objects.create(
+        user=request.user,
+        name=request.POST.get('name', '').strip(),
+        description=request.POST.get('description', ''),
+        price=request.POST.get('price') or 0,
+        category=request.POST.get('category', ''),
+        thumbnail=request.POST.get('thumbnail', ''),
+        is_featured=request.POST.get('is_featured') == 'on',
+    )
+    return HttpResponse(b'CREATED', status=201)
+
+@csrf_exempt
+@require_POST
+@login_required(login_url='/login/')
+def update_product_ajax(request, id):
+    p = Product.objects.filter(user=request.user, pk=id).first()
+    if not p: return HttpResponse(status=404)
+    p.name = request.POST.get('name', p.name)
+    p.description = request.POST.get('description', p.description)
+    p.price = request.POST.get('price') or p.price
+    p.category = request.POST.get('category', p.category)
+    p.thumbnail = request.POST.get('thumbnail', p.thumbnail)
+    p.is_featured = (request.POST.get('is_featured') == 'on')
+    p.save()
+    return HttpResponse(b'UPDATED', status=200)
+
+@csrf_exempt
+@require_POST
+@login_required(login_url='/login/')
+def delete_product_ajax(request, id):
+    p = Product.objects.filter(user=request.user, pk=id).first()
+    if not p: return HttpResponse(status=404)
+    p.delete()
+    return HttpResponse(b'DELETED', status=200)
+
+
+@require_POST
+def login_ajax(request):
+    username = request.POST.get('username', '')
+    password = request.POST.get('password', '')
+    user = authenticate(request, username=username, password=password)
+    if user is None:
+        return JsonResponse({'ok': False, 'error': 'Invalid credentials'}, status=400)
+
+    prev = user.last_login
+    login(request, user)
+    resp = JsonResponse({'ok': True, 'username': user.username})
+    resp.set_cookie('last_login', prev.strftime("%Y-%m-%d %H:%M") if prev else 'First login!')
+    return resp
+
+@require_POST
+def register_ajax(request):
+    form = UserCreationForm(request.POST)
+    if not form.is_valid():
+        # Return Django form errors as JSON
+        return JsonResponse({'ok': False, 'errors': form.errors}, status=400)
+    form.save()
+    return JsonResponse({'ok': True})
+
+@require_POST
+def logout_ajax(request):
+    logout(request)
+    resp = JsonResponse({'ok': True})
+    resp.delete_cookie('last_login')
+    return resp
+
 
 
 

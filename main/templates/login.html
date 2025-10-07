@@ -1,24 +1,58 @@
 {% extends 'base.html' %}
-
 {% block title %}Login{% endblock %}
-
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow p-4">
-            <h2 class="mb-3">Login</h2>
-            <form method="POST" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }}
-                {% if form.errors %}
-                    <div class="alert alert-danger mt-2">
-                        Please check your username and password.
-                    </div>
-                {% endif %}
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-            <p class="mt-3">Don't have an account? <a href="{% url 'main:register' %}">Register here</a></p>
-        </div>
+  <div class="col-md-6">
+    <div class="card shadow p-4">
+      <h2 class="mb-3">Login</h2>
+
+      <!-- Fallback action does nothing server-side; AJAX handles submit -->
+      <form id="loginForm" method="POST" action="{% url 'main:login' %}" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div id="loginError" class="alert alert-danger d-none mt-2"></div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+      </form>
+
+      <p class="mt-3">Don't have an account? <a href="{% url 'main:register' %}">Register here</a></p>
     </div>
+  </div>
 </div>
+
+<script>
+(function(){
+  const form = document.getElementById('loginForm');
+  const err  = document.getElementById('loginError');
+  const CSRF = (document.cookie.match(/(^|;)\s*csrftoken=([^;]+)/)||[])[2] || '';
+
+  if(!form) return;
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if (err){ err.classList.add('d-none'); err.textContent=''; }
+
+    try{
+      const res = await fetch("{% url 'main:login_ajax' %}", {
+        method:'POST',
+        headers:{'X-CSRFToken': CSRF},
+        body: new FormData(form),
+      });
+      const data = await res.json();
+      if(!res.ok || !data.ok) {
+        const msg = data?.error || 'Login failed';
+        showToast?.('Login failed', msg, 'error', 5500);
+        if (err){ err.textContent = msg; err.classList.remove('d-none'); }
+        return;
+      }
+      sessionStorage.setItem('pendingToast', JSON.stringify({
+        title:'Logged in', message:'Welcome back!', type:'success', duration:4500
+      }));
+      window.location.href = "{% url 'main:home' %}";
+    }catch(_){
+      showToast?.('Login failed','Network error. Try again.','error',5500);
+      if (err){ err.textContent = 'Network error. Try again.'; err.classList.remove('d-none'); }
+    }
+  });
+})();
+</script>
 {% endblock %}

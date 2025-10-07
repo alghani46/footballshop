@@ -14,4 +14,12 @@ urlpatterns = [
     path("logout/", views.logout_user, name="logout"),
     path("product/<int:id>/edit/", views.edit_product, name="edit_product"),
     path("product/<int:id>/delete/", views.delete_product, name="delete_product"),
+    path('api/products/', views.products_json, name='products_json'),
+    path('api/products/<int:id>/', views.product_json_by_id, name='product_json_by_id'),
+    path('api/products/create/', views.add_product_ajax, name='add_product_ajax'),
+    path('api/products/<int:id>/update/', views.update_product_ajax, name='update_product_ajax'),
+    path('api/products/<int:id>/delete/', views.delete_product_ajax, name='delete_product_ajax'),
+    path('api/auth/login/', views.login_ajax, name='login_ajax'),
+    path('api/auth/register/', views.register_ajax, name='register_ajax'),
+    path('api/auth/logout/', views.logout_ajax, name='logout_ajax'),
 ]

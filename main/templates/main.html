@@ -1,57 +1,168 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block meta %}
-    <title>{{ app_name }}</title>
-{% endblock meta %}
 
+{% block meta %}<title>{{ app_name }}</title>{% endblock meta %}
 {% block title %}Home{% endblock %}
 
 {% block content %}
 <h2 class="mb-3">Welcome, {{ username }}</h2>
 <p><strong>Last Login:</strong> {{ last_login|date:"Y-m-d H:i" }}</p>
 
-
-<!-- add product -->
-<p>
-    <a href="{% url 'main:add_product' %}">
-        <button type="button">Add Product</button>
-    </a>
+<p class="d-flex gap-2">
+  <a href="{% url 'main:add_product' %}">
+    <button type="button" class="btn btn-outline-secondary btn-sm">Add Product</button>
+  </a>
+  <button onclick="showModal()" class="btn btn-outline-success btn-sm">Create Product (AJAX)</button>
+  <button id="refreshBtn" class="btn btn-outline-primary btn-sm">Refresh</button>
 </p>
 
+<!-- States -->
+<div id="loading" class="p-4 border rounded d-none">Loading products…</div>
+<div id="error" class="p-4 border rounded text-danger d-none">Failed to load products.</div>
+<div id="empty" class="text-center text-muted d-none">
+  <img src="{% static 'images/no_product.png' %}" width="120" class="mb-2" alt="">
+  <div>No products available. Add some!</div>
+</div>
 
+<!-- AJAX grid -->
+<div id="grid" class="row g-3 d-none"></div>
+
+<!-- Fallback server render (optional) -->
 <h3 class="mt-4">Available Products</h3>
-
 {% if products %}
-<div class="row">
+  <div class="row">
     {% for product in products %}
     <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-            {% if product.thumbnail %}
-            <img src="{{ product.thumbnail }}" class="card-img-top" alt="{{ product.name }}">
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text">{{ product.description|truncatewords:15 }}</p>
-                <p class="fw-bold text-success">Rp{{ product.price }}</p>
-                <p><em>Category: {{ product.category }}</em></p>
-                <p><em>Featured: {{ product.is_featured }}</em></p>
-                <div class="d-flex justify-content-between">
-                <a href="{% url 'main:product_detail' product.id %}" class="btn btn-primary btn-lg w-25 text-dark">Detail</a>
-                <a href="{% url 'main:edit_product' product.id %}" class="btn btn-warning btn-lg w-25 text-dark">Edit</a>
-                <a href="{% url 'main:delete_product' product.id %}" class="btn btn-danger btn-lg w-25 text-dark">Delete</a>
+      <div class="card mb-4 shadow-sm">
+        {% if product.thumbnail %}
+          <img src="{{ product.thumbnail }}" class="card-img-top" alt="{{ product.name }}">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ product.name }}</h5>
+          <p class="card-text">{{ product.description|truncatewords:15 }}</p>
+          <p class="fw-bold text-success">Rp{{ product.price }}</p>
+          <p><em>Category: {{ product.category }}</em></p>
+          <p><em>Featured: {{ product.is_featured }}</em></p>
 
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'main:product_detail' product.id %}" class="btn btn-primary btn-sm">Detail</a>
 
-                </div>
-            </div>
+            <!-- Use quoted ids/names to avoid editor squiggles and JS parse issues -->
+            <button type="button" class="btn btn-warning btn-sm"
+                    onclick="openEditModal('{{ product.id }}')">Edit</button>
+
+            <button type="button" class="btn btn-danger btn-sm"
+                    onclick="openDeleteModal('{{ product.id }}', '{{ product.name|escapejs }}')">Delete</button>
+          </div>
         </div>
+      </div>
     </div>
     {% endfor %}
-</div>
+  </div>
 {% else %}
-<!-- No Product pciture handling -->
-<div class="text-center">
-    <img src="{% static 'images/no_product.png' %}" alt="No products" width="150">
+  <div class="text-center">
+    <img src="{% static 'images/no_product.png' %}" width="150" alt="">
     <p class="mt-2">No products available. Add some!</p>
-</div>
+  </div>
 {% endif %}
+
+<script>
+
+const LIST_URL        = "{% url 'main:products_json' %}";
+const DETAIL_URL      = (id) => "{% url 'main:product_detail' 0 %}".replace('0', id);
+const FETCH_ONE_URL   = (id) => "{% url 'main:product_json_by_id' 0 %}".replace('0', id);
+const CREATE_URL      = "{% url 'main:add_product_ajax' %}";
+const UPDATE_URL      = (id) => "{% url 'main:update_product_ajax' 0 %}".replace('0', id);
+const DELETE_URL      = (id) => "{% url 'main:delete_product_ajax' 0 %}".replace('0', id);
+
+
+function getCookie(name){
+  const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return m ? m.pop() : '';
+}
+const CSRF = getCookie('csrftoken');
+
+
+const elLoading = document.getElementById('loading');
+const elError   = document.getElementById('error');
+const elEmpty   = document.getElementById('empty');
+const elGrid    = document.getElementById('grid');
+
+function setState({loading=false,error=false,empty=false,grid=false}) {
+  elLoading.classList.toggle('d-none', !loading);
+  elError.classList.toggle('d-none', !error);
+  elEmpty.classList.toggle('d-none', !empty);
+  elGrid.classList.toggle('d-none', !grid);
+}
+
+
+function card(p){
+  const thumb = p.thumbnail ? `<img src="${p.thumbnail}" class="card-img-top" alt="${p.name}">` : '';
+  const escapedName = (p.name || '').replace(/'/g, "\\'");
+  return `
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        ${thumb}
+        <div class="card-body">
+          <h5 class="card-title">${p.name}</h5>
+          <p class="card-text text-muted">${(p.description||'').slice(0,120)}</p>
+          <p class="fw-bold text-success">Rp${p.price}</p>
+          <p class="mb-0"><em>Category: ${p.category||'-'}</em></p>
+          <p class="mb-2"><em>Featured: ${p.is_featured ? 'True' : 'False'}</em></p>
+          <div class="d-flex justify-content-between">
+            <a href="${DETAIL_URL(p.id)}" class="btn btn-primary btn-sm">Detail</a>
+            <button type="button" class="btn btn-warning btn-sm" onclick="openEditModal('${p.id}')">Edit</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModal('${p.id}', '${escapedName}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+
+async function loadProducts(){
+  try{
+    setState({loading:true});
+    const res = await fetch(LIST_URL, { headers:{'Accept':'application/json'} });
+    if(!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    if(!data.length){ setState({empty:true}); return; }
+    elGrid.innerHTML = data.map(card).join('');
+    setState({grid:true});
+  }catch(e){
+    console.error(e);
+    setState({error:true});
+  }
+}
+
+
+async function openEditModal(id){
+  try{
+    const res = await fetch(FETCH_ONE_URL(id), { headers:{'Accept':'application/json'} });
+    if(!res.ok) throw new Error();
+    const p = await res.json();
+    // Provided by modal.html
+    showEdit(p);
+  }catch(_){
+    showToast?.('Failed to fetch item','Try again.','error');
+  }
+}
+
+
+function openDeleteModal(id, name){
+  // Provided by modal.html
+  window.__openDeleteModal(id, name);
+}
+
+
+document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+document.addEventListener('products:refresh', loadProducts);
+
+
+window.__ajaxEndpoints = { CREATE_URL, UPDATE_URL, DELETE_URL };
+window.__csrfToken = CSRF;
+
+
+loadProducts();
+</script>
 {% endblock %}
