@@ -15,6 +15,10 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 from django.middleware.csrf import get_token
 from django.utils.html import strip_tags
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.html import strip_tags
+from django.http import JsonResponse
+import json
 
 
 
@@ -66,6 +70,84 @@ def add_product(request):
     else:
         form = ProductForm()
     return render(request, "add_product.html", {"form": form})
+
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method != 'POST':
+        return JsonResponse(
+            {"status": "error", "message": "Invalid method"},
+            status=405,
+        )
+
+    # Must be logged in , CookieRequest will send the session cookie
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"status": "error", "message": "Not authenticated"},
+            status=401,
+        )
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"status": "error", "message": "Invalid JSON"},
+            status=400,
+        )
+
+    name = strip_tags(data.get("name", "").strip())
+    description = strip_tags(data.get("description", "").strip())
+    category = data.get("category", "")
+    thumbnail = data.get("thumbnail", "")
+    is_featured = data.get("is_featured", False)
+    price_raw = data.get("price", 0)
+
+    try:
+        # adjust as needed
+        price = int(price_raw)
+    except (TypeError, ValueError):
+        return JsonResponse(
+            {"status": "error", "message": "Invalid price"},
+            status=400,
+        )
+
+    new_product = Product(
+        name=name,
+        description=description,
+        category=category,
+        thumbnail=thumbnail,
+        is_featured=is_featured,
+        price=price,
+        user=request.user,   # ALWAYS the logged-in user
+    )
+    new_product.save()
+
+    return JsonResponse(
+        {"status": "success", "id": new_product.id},
+        status=200,
+    )
+
+
+def my_products_flutter(request):
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."},
+            status=401,
+        )
+
+    qs = Product.objects.filter(user=request.user).order_by('-id')
+    data = [
+        {
+            "id": p.id,
+            "name": p.name,
+            "price": p.price,
+            "description": p.description,
+            "thumbnail": p.thumbnail,
+            "category": p.category,
+            "is_featured": p.is_featured,
+        }
+        for p in qs
+    ]
+    return JsonResponse(data, safe=False)
 
 
 @login_required

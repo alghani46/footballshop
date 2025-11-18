@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path,include
 from . import views
+from .views import create_product_flutter,my_products_flutter
 app_name = "main" 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -22,4 +23,7 @@ urlpatterns = [
     path('api/auth/login/', views.login_ajax, name='login_ajax'),
     path('api/auth/register/', views.register_ajax, name='register_ajax'),
     path('api/auth/logout/', views.logout_ajax, name='logout_ajax'),
+    path("auth/", include("authentication.urls")),
+    path("create-flutter/", create_product_flutter, name="create_product_flutter"),
+    path("api/flutter/my-products/", my_products_flutter, name="my_products_flutter"),
 ]

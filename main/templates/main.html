@@ -14,6 +14,8 @@
   </a>
   <button onclick="showModal()" class="btn btn-outline-success btn-sm">Create Product (AJAX)</button>
   <button id="refreshBtn" class="btn btn-outline-primary btn-sm">Refresh</button>
+  <button id="sortLowHigh" class="btn btn-outline-dark btn-sm">Sort Price LowHigh</button>
+  <button id="sortHighLow" class="btn btn-outline-dark btn-sm">Sort Price HighLow</button>
 </p>
 
 <!-- States -->
@@ -154,10 +156,8 @@ function openDeleteModal(id, name){
   window.__openDeleteModal(id, name);
 }
 
-
 document.getElementById('refreshBtn').addEventListener('click', loadProducts);
 document.addEventListener('products:refresh', loadProducts);
-
 
 window.__ajaxEndpoints = { CREATE_URL, UPDATE_URL, DELETE_URL };
 window.__csrfToken = CSRF;
